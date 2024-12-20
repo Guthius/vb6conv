@@ -38,12 +38,28 @@ func GetInt(key string, props PropertyMap) (int, bool) {
 		return 0, false
 	}
 
-	v, err := strconv.Atoi(str)
+	str = strings.TrimSpace(str)
+	v, err := strconv.ParseInt(str, 10, 32)
 	if err != nil {
 		return 0, false
 	}
 
-	return v, true
+	return int(v), true
+}
+
+func GetFloat32(key string, props PropertyMap) (float32, bool) {
+	str, ok := GetProp(key, props)
+	if !ok {
+		return 0, false
+	}
+
+	str = strings.TrimSpace(str)
+	v, err := strconv.ParseFloat(str, 32)
+	if err != nil {
+		return 0, false
+	}
+
+	return float32(v), true
 }
 
 func GetBool(key string, props PropertyMap) (bool, bool) {
@@ -168,4 +184,37 @@ func GetResource(c *Control, path string) ([]byte, error) {
 	}
 
 	return data, nil
+}
+
+type Font struct {
+	Family        string
+	Size          float32
+	Charset       int
+	Weight        int
+	Underline     bool
+	Italic        bool
+	Strikethrough bool
+}
+
+func GetFont(key string, props PropertyMap) (*Font, bool) {
+	prop, ok := props[key]
+	if !ok {
+		return nil, false
+	}
+
+	family, ok := GetProp("Name", prop.Properties)
+	if !ok {
+		return nil, false
+	}
+
+	font := &Font{}
+	font.Family, _ = strconv.Unquote(family)
+	font.Size, _ = GetFloat32("Size", prop.Properties)
+	font.Charset, _ = GetInt("Charset", prop.Properties)
+	font.Weight, _ = GetInt("Weight", prop.Properties)
+	font.Underline, _ = GetBool("Underline", prop.Properties)
+	font.Italic, _ = GetBool("Italic", prop.Properties)
+	font.Strikethrough, _ = GetBool("Strikethrough", prop.Properties)
+
+	return font, true
 }

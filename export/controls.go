@@ -17,10 +17,20 @@ type Control struct {
 
 type ControlBuilder func(c *vb6.Control) *Control
 
+func applyDefaultProps(c *vb6.Control, props map[string]string) {
+	if v, ok := vb6.GetBool("Visible", c.Properties); ok {
+		props["Visible"] = toBool(v)
+	}
+
+	if font, ok := vb6.GetFont("Font", c.Properties); ok {
+		props["Font"] = toFont(font)
+	}
+}
+
 func FormBuilder(c *vb6.Control) *Control {
 	props := make(map[string]string)
 	props["AutoScaleDimensions"] = toSizeF(6, 13)
-	props["AutoScaleMode"] = "System.Windows.Forms.AutoScaleMode.Font"
+	props["AutoScaleMode"] = "System.Windows.Forms.AutoScaleMode.None"
 
 	if w, h, ok := vb6.GetVector2("ClientWidth", "ClientHeight", c.Properties); ok {
 		props["ClientSize"] = toSize(w, h)
@@ -36,10 +46,13 @@ func FormBuilder(c *vb6.Control) *Control {
 		props["BackColor"] = toColor(v)
 	}
 
+	applyDefaultProps(c, props)
+
 	// TODO: ClientLeft, ClientTop
 	// TODO: ControlBox
-	// TODO: StartUpPosition
+	// TODO: StartUpPosition, WindowState
 	// TODO: MaxButton, MinButton
+	// TODO: KeyPreview
 
 	return &Control{
 		Name:      c.Name,
@@ -74,6 +87,8 @@ func PictureBoxBuilder(c *vb6.Control) *Control {
 			props["BorderStyle"] = "System.Windows.Forms.BorderStyle.Fixed3D"
 		}
 	}
+
+	applyDefaultProps(c, props)
 
 	resources := make(map[string]any)
 	if locator, ok := vb6.GetProp("Picture", c.Properties); ok {
