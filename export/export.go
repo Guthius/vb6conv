@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/guthius/vb6conv/resx"
 	"github.com/guthius/vb6conv/vb6"
@@ -12,12 +13,13 @@ import (
 type ProjectInfo struct {
 	Name      string
 	Namespace string
+	Output    string
 }
 
 func Export(p *ProjectInfo, f *vb6.Form) {
 	control := buildControl(f.Root)
 	resx := resx.NewResx()
-	resName := control.Name + ".resx"
+	resName := filepath.Join(p.Output, control.Name+".resx")
 	exportResources(resx, control)
 	hasResources := resx.Count() > 0
 	resx.Save(resName)
@@ -28,7 +30,7 @@ func Export(p *ProjectInfo, f *vb6.Form) {
 }
 
 func writeProjectFile(p *ProjectInfo) {
-	fileName := p.Name + ".csproj"
+	fileName := filepath.Join(p.Output, p.Name+".csproj")
 	file, err := os.Create(fileName)
 	if err != nil {
 		log.Fatal(err)
@@ -53,7 +55,7 @@ func writeProjectFile(p *ProjectInfo) {
 }
 
 func writeProgramFile(p *ProjectInfo) {
-	fileName := "Program.cs"
+	fileName := filepath.Join(p.Output, "Program.cs")
 	file, err := os.Create(fileName)
 	if err != nil {
 		log.Fatal(err)

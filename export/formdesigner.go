@@ -3,10 +3,11 @@ package export
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func exportFormDesigner(p *ProjectInfo, f *Control, hasRes bool) error {
-	filename := f.Name + ".Designer.cs"
+	filename := filepath.Join(p.Output, f.Name+".Designer.cs")
 	file, err := os.Create(filename)
 	if err != nil {
 		return err

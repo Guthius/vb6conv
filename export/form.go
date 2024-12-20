@@ -2,10 +2,11 @@ package export
 
 import (
 	"os"
+	"path/filepath"
 )
 
 func exportForm(p *ProjectInfo, f *Control) error {
-	filename := f.Name + ".cs"
+	filename := filepath.Join(p.Output, f.Name+".cs")
 	file, err := os.Create(filename)
 	if err != nil {
 		return err

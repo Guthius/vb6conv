@@ -7,6 +7,12 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}",
+            "args": [
+                "--project",
+                "D:/Projects/VB6/ms3_0_3/client/Mirage.vbp",
+                "--output",
+                "../Mirage.NET"
+            ]
         }
     ]
 }

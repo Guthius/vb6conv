@@ -227,7 +227,16 @@ func Load(path string) (*Form, error) {
 		Folder:   filepath.Dir(path),
 	}
 
-	lines, root, err := readControl(lines[1:], form)
+	lines = lines[1:]
+	for len(lines) > 0 {
+		line := strings.TrimSpace(lines[0])
+		if !strings.HasPrefix(line, "Object = ") {
+			break
+		}
+		lines = lines[1:]
+	}
+
+	lines, root, err := readControl(lines, form)
 	if err != nil {
 		return nil, err
 	}
