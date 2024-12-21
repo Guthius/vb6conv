@@ -64,7 +64,7 @@ func main() {
 		Output:    output,
 	}
 
-	form, err := vb6.Load("D:/Projects/VB6/ms3_0_3/client/frmMirage.frm")
+	form, err := vb6.Load("D:/Projects/VB6/ms3_0_3/client/frmMainMenu.frm")
 	if err != nil {
 		panic(err)
 	}

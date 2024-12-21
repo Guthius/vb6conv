@@ -71,7 +71,7 @@ internal static class Program
 	[STAThread]
     public static void Main()
     {
-        Application.Run(new frmCredits());
+        Application.Run(new frmMainMenu());
     }
 }`, p.Namespace))
 }

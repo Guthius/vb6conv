@@ -22,8 +22,16 @@ func applyDefaultProps(c *vb6.Control, props map[string]string) {
 		props["Visible"] = toBool(v)
 	}
 
+	if v, ok := vb6.GetColor("BackColor", c.Properties); ok {
+		props["BackColor"] = toColor(v)
+	}
+
 	if font, ok := vb6.GetFont("Font", c.Properties); ok {
 		props["Font"] = toFont(font)
+	}
+
+	if v, ok := vb6.GetInt("TabIndex", c.Properties); ok {
+		props["TabIndex"] = toInt(v)
 	}
 }
 
@@ -66,9 +74,7 @@ func FormBuilder(c *vb6.Control) *Control {
 
 func PictureBoxBuilder(c *vb6.Control) *Control {
 	props := make(map[string]string)
-	if v, ok := vb6.GetColor("BackColor", c.Properties); ok {
-		props["BackColor"] = toColor(v)
-	}
+
 	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
 		props["Location"] = toPoint(x, y)
 	}
@@ -102,10 +108,6 @@ func PictureBoxBuilder(c *vb6.Control) *Control {
 		}
 	}
 
-	if v, ok := vb6.GetInt("TabIndex", c.Properties); ok {
-		props["TabIndex"] = toInt(v)
-	}
-
 	props["TabStop"] = "false"
 
 	return &Control{
@@ -115,6 +117,54 @@ func PictureBoxBuilder(c *vb6.Control) *Control {
 		Props:     props,
 		Children:  buildControlSlice(c.Children),
 		MustInit:  true,
+	}
+}
+
+func LabelBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+
+	if alignment, ok := vb6.GetInt("Alignment", c.Properties); ok {
+		switch alignment {
+		case 0:
+			props["TextAlign"] = "System.Drawing.ContentAlignment.TopLeft"
+		case 1:
+			props["TextAlign"] = "System.Drawing.ContentAlignment.TopRight"
+		case 2:
+			props["TextAlign"] = "System.Drawing.ContentAlignment.TopCenter"
+		}
+	}
+
+	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
+		props["Location"] = toPoint(x, y)
+	}
+
+	if w, h, ok := vb6.GetVector2("Width", "Height", c.Properties); ok {
+		props["Size"] = toSize(w, h)
+	}
+
+	if foreColor, ok := vb6.GetColor("ForeColor", c.Properties); ok {
+		props["ForeColor"] = toColor(foreColor)
+	}
+
+	if caption, ok := vb6.GetProp("Caption", c.Properties); ok {
+		props["Text"] = caption
+	}
+
+	applyDefaultProps(c, props)
+
+	if backStyle, ok := vb6.GetInt("BackStyle", c.Properties); ok {
+		if backStyle == 0 { // Transparent
+			props["BackColor"] = "System.Drawing.Color.Transparent"
+		}
+	}
+
+	return &Control{
+		Name:      c.Name,
+		TypeName:  "System.Windows.Forms.Label",
+		Resources: make(map[string]any),
+		Props:     props,
+		Children:  buildControlSlice(c.Children),
+		MustInit:  false,
 	}
 }
 
@@ -136,6 +186,8 @@ func buildControl(c *vb6.Control) *Control {
 		builder = FormBuilder
 	case c.TypeName == "VB.PictureBox":
 		builder = PictureBoxBuilder
+	case c.TypeName == "VB.Label":
+		builder = LabelBuilder
 	default:
 		return nil
 	}
