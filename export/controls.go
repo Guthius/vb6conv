@@ -56,10 +56,33 @@ func FormBuilder(c *vb6.Control) *Control {
 
 	applyDefaultProps(c, props)
 
-	// TODO: ClientLeft, ClientTop
-	// TODO: ControlBox
-	// TODO: StartUpPosition, WindowState
-	// TODO: MaxButton, MinButton
+	if startUpPosition, ok := vb6.GetInt("StartUpPosition", c.Properties); ok {
+		switch startUpPosition {
+		case 0:
+			props["StartPosition"] = "System.Windows.Forms.FormStartPosition.Manual"
+		case 1:
+			props["StartPosition"] = "System.Windows.Forms.FormStartPosition.CenterParent"
+		case 2:
+			props["StartPosition"] = "System.Windows.Forms.FormStartPosition.CenterScreen"
+		case 3:
+			props["StartPosition"] = "System.Windows.Forms.FormStartPosition.WindowsDefaultLocation"
+		}
+	}
+
+	if controlBox, ok := vb6.GetBool("ControlBox", c.Properties); ok {
+		props["ControlBox"] = toBool(controlBox)
+	}
+
+	// TODO: WindowState
+
+	if minButton, ok := vb6.GetBool("MinButton", c.Properties); ok {
+		props["MinimizeBox"] = toBool(minButton)
+	}
+
+	if maxButton, ok := vb6.GetBool("MaxButton", c.Properties); ok {
+		props["MaximizeBox"] = toBool(maxButton)
+	}
+
 	// TODO: KeyPreview
 
 	return &Control{
