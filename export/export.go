@@ -18,6 +18,7 @@ type ProjectInfo struct {
 
 func Export(p *ProjectInfo, f *vb6.Form) {
 	control := buildControl(f.Root)
+	buildMenu(control)
 	resx := resx.NewResx()
 	resName := filepath.Join(p.Output, control.Name+".resx")
 	exportResources(resx, control)

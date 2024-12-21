@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 
 	"github.com/guthius/vb6conv/vb6"
@@ -15,6 +16,7 @@ type Control struct {
 	PropCalls map[string]string
 	Children  []*Control
 	MustInit  bool
+	SkipAdd   bool // Indicates this this control should not be added to the parent's control collection
 }
 
 type ControlBuilder func(c *vb6.Control) *Control
@@ -225,6 +227,10 @@ func TextBoxBuilder(c *vb6.Control) *Control {
 		}
 	}
 
+	if multiLine, ok := vb6.GetBool("MultiLine", c.Properties); ok {
+		props["Multiline"] = toBool(multiLine)
+	}
+
 	// TODO:  IMEMode         =   3  'DISABLE
 
 	return &Control{
@@ -327,6 +333,8 @@ func buildControl(c *vb6.Control) *Control {
 	switch {
 	case c.TypeName == "VB.Form":
 		builder = FormBuilder
+	case c.TypeName == "VB.Menu":
+		builder = MenuItemBuilder
 	case c.TypeName == "VB.PictureBox":
 		builder = PictureBoxBuilder
 	case c.TypeName == "VB.Label":
@@ -344,4 +352,86 @@ func buildControl(c *vb6.Control) *Control {
 	}
 
 	return builder(c)
+}
+
+func MenuItemBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+	propCalls := make(map[string]string)
+
+	if caption, ok := vb6.GetStr("Caption", c.Properties); ok {
+		props["Text"] = toStr(caption)
+	}
+
+	children := buildMenuItemSlice(c.Children)
+	if len(children) > 0 {
+		childNames := make([]string, 0, len(children))
+		for i, child := range children {
+			child.Props["Index"] = toInt(i)
+			childNames = append(childNames, fmt.Sprintf("this.%s", child.Name))
+		}
+		propCalls["MenuItems"] = fmt.Sprintf("AddRange(%s)", toArrayOfType(childNames, "System.Windows.Forms.MenuItem"))
+	}
+
+	return &Control{
+		Name:      c.Name,
+		TypeName:  "System.Windows.Forms.MenuItem",
+		Resources: make(map[string]any),
+		Props:     props,
+		PropCalls: propCalls,
+		Children:  children,
+		MustInit:  false,
+		SkipAdd:   true,
+	}
+}
+
+func buildMenuItemSlice(controls []*vb6.Control) []*Control {
+	result := make([]*Control, 0, len(controls))
+	for _, c := range controls {
+		if c.TypeName != "VB.Menu" {
+			fmt.Fprintf(os.Stderr, "unexpected control type in menu: %s\n", c.TypeName)
+			continue
+		}
+		control := MenuItemBuilder(c)
+		if control != nil {
+			result = append(result, control)
+		}
+	}
+	return result
+}
+
+func buildMenu(f *Control) {
+	menuItems := make([]*Control, 0)
+	menuItemNames := make([]string, 0, len(f.Children))
+
+	newChildren := make([]*Control, 0, len(f.Children))
+	for _, c := range f.Children {
+		if c.TypeName == "System.Windows.Forms.MenuItem" {
+			menuItems = append(menuItems, c)
+			menuItemNames = append(menuItemNames, fmt.Sprintf("this.%s", c.Name))
+		} else {
+			newChildren = append(newChildren, c)
+		}
+	}
+
+	if len(menuItems) == 0 {
+		return
+	}
+
+	f.Children = newChildren
+
+	propCalls := make(map[string]string)
+	propCalls["MenuItems"] = fmt.Sprintf("AddRange(%s)", toArrayOfType(menuItemNames, "System.Windows.Forms.MenuItem"))
+
+	menu := &Control{
+		Name:      "mainMenu1",
+		TypeName:  "System.Windows.Forms.MainMenu",
+		Resources: make(map[string]any),
+		PropCalls: propCalls,
+		Children:  menuItems,
+		MustInit:  false,
+		SkipAdd:   true,
+	}
+
+	f.Props["Menu"] = "this.mainMenu1"
+	f.Children = append(f.Children, menu)
 }

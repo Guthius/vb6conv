@@ -82,3 +82,16 @@ func toObjectArray(items []string) string {
 	sb.WriteString("\n\t\t}")
 	return sb.String()
 }
+
+func toArrayOfType(items []string, typeName string) string {
+	sb := strings.Builder{}
+	sb.WriteString(fmt.Sprintf("new %s[] {\n", typeName))
+	for i, item := range items {
+		if i > 0 {
+			sb.WriteString(",\n")
+		}
+		sb.WriteString(fmt.Sprintf("\t\t\t%s", item))
+	}
+	sb.WriteString("\n\t\t}")
+	return sb.String()
+}

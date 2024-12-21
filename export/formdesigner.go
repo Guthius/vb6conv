@@ -89,7 +89,9 @@ func writeControlProperties(p *ProjectInfo, f *Control, w *ExportWriter, root bo
 		w.Writef("%s.%s.%s;", name, k, v)
 	}
 	for _, c := range f.Children {
-		w.Writef("%s.Controls.Add(this.%s);", name, c.Name)
+		if !c.SkipAdd {
+			w.Writef("%s.Controls.Add(this.%s);", name, c.Name)
+		}
 	}
 }
 
