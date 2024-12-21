@@ -96,9 +96,10 @@ func Open(name string) (*Project, error) {
 			if err != nil {
 				return nil, err
 			}
+			mod.Filename = filepath.Join(project.Folder, mod.Filename)
 			project.Modules = append(project.Modules, mod)
 		case "Form":
-			project.Forms = append(project.Forms, value)
+			project.Forms = append(project.Forms, filepath.Join(project.Folder, value))
 		case "Name":
 			value = strings.TrimSpace(value)
 			if len(value) > 0 {

@@ -52,8 +52,6 @@ func main() {
 		panic(err)
 	}
 
-	//vbp.Open(`D:\Projects\VB6\ms3_0_3\client\Mirage.vbp`)
-
 	if len(namespace) == 0 {
 		namespace = vbproj.Name
 	}
@@ -64,10 +62,12 @@ func main() {
 		Output:    output,
 	}
 
-	form, err := vb6.Load("D:/Projects/VB6/ms3_0_3/client/frmMainMenu.frm")
-	if err != nil {
-		panic(err)
-	}
+	for _, form := range vbproj.Forms {
+		f, err := vb6.Load(form)
+		if err != nil {
+			panic(err)
+		}
 
-	export.Export(&project, form)
+		export.Export(&project, f)
+	}
 }
