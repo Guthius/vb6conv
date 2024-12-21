@@ -67,7 +67,11 @@ func writeControlInitializers(p *ProjectInfo, f *Control, w *ExportWriter) {
 	for _, c := range f.Children {
 		writeControlInitializers(p, c, w)
 	}
-	w.Writef("%s = new %s();", f.Name, f.TypeName)
+	if f.IsComponent {
+		w.Writef("%s = new %s(this.components);", f.Name, f.TypeName)
+	} else {
+		w.Writef("%s = new %s();", f.Name, f.TypeName)
+	}
 }
 
 func writeControlProperties(p *ProjectInfo, f *Control, w *ExportWriter, root bool) {
@@ -81,7 +85,9 @@ func writeControlProperties(p *ProjectInfo, f *Control, w *ExportWriter, root bo
 	w.Write("//")
 	w.Writef("// %s", f.Name)
 	w.Write("//")
-	w.Writef("%s.Name = \"%s\";", name, f.Name)
+	if !f.SkipName {
+		w.Writef("%s.Name = \"%s\";", name, f.Name)
+	}
 	for k, v := range f.Props {
 		w.Writef("%s.%s = %s;", name, k, v)
 	}
@@ -138,6 +144,7 @@ func writeInitializeComponent(p *ProjectInfo, f *Control, w *ExportWriter, hasRe
 	w.Write("private void InitializeComponent()")
 	w.Write("{")
 	w.WriteIndent(func() {
+		w.Write("this.components = new System.ComponentModel.Container();")
 		if hasRes {
 			w.Writef("System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(%s));", f.Name)
 		}

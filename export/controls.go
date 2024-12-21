@@ -9,14 +9,16 @@ import (
 )
 
 type Control struct {
-	Name      string
-	TypeName  string
-	Resources map[string]any
-	Props     map[string]string
-	PropCalls map[string]string
-	Children  []*Control
-	MustInit  bool
-	SkipAdd   bool // Indicates this this control should not be added to the parent's control collection
+	Name        string
+	TypeName    string
+	Resources   map[string]any
+	Props       map[string]string
+	PropCalls   map[string]string
+	Children    []*Control
+	MustInit    bool
+	SkipAdd     bool // Indicates that the control should not be added to the parent's control collection
+	SkipName    bool // Indicates that the control's name property should not be generated
+	IsComponent bool
 }
 
 type ControlBuilder func(c *vb6.Control) *Control
@@ -317,6 +319,26 @@ func ComboBoxBuilder(c *vb6.Control) *Control {
 	}
 }
 
+func TimerBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+
+	if interval, ok := vb6.GetInt("Interval", c.Properties); ok {
+		props["Interval"] = toInt(interval)
+	}
+
+	return &Control{
+		Name:        c.Name,
+		TypeName:    "System.Windows.Forms.Timer",
+		Resources:   make(map[string]any),
+		Props:       props,
+		Children:    buildControlSlice(c.Children),
+		MustInit:    false,
+		SkipAdd:     true,
+		SkipName:    true,
+		IsComponent: true,
+	}
+}
+
 func buildControlSlice(controls []*vb6.Control) []*Control {
 	result := make([]*Control, 0, len(controls))
 	for _, c := range controls {
@@ -347,6 +369,8 @@ func buildControl(c *vb6.Control) *Control {
 		builder = CommandButtonBuilder
 	case c.TypeName == "VB.ComboBox":
 		builder = ComboBoxBuilder
+	case c.TypeName == "VB.Timer":
+		builder = TimerBuilder
 	default:
 		return nil
 	}
@@ -423,13 +447,14 @@ func buildMenu(f *Control) {
 	propCalls["MenuItems"] = fmt.Sprintf("AddRange(%s)", toArrayOfType(menuItemNames, "System.Windows.Forms.MenuItem"))
 
 	menu := &Control{
-		Name:      "mainMenu1",
-		TypeName:  "System.Windows.Forms.MainMenu",
-		Resources: make(map[string]any),
-		PropCalls: propCalls,
-		Children:  menuItems,
-		MustInit:  false,
-		SkipAdd:   true,
+		Name:        "mainMenu1",
+		TypeName:    "System.Windows.Forms.MainMenu",
+		Resources:   make(map[string]any),
+		PropCalls:   propCalls,
+		Children:    menuItems,
+		MustInit:    false,
+		SkipAdd:     true,
+		IsComponent: true,
 	}
 
 	f.Props["Menu"] = "this.mainMenu1"
