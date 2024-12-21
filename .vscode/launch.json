@@ -9,9 +9,9 @@
             "program": "${workspaceFolder}",
             "args": [
                 "--project",
-                "D:/Projects/VB6/ms3_0_3/client/Mirage.vbp",
+                "D:/Projects/VB6/MS303/client/Mirage.vbp",
                 "--output",
-                "../Mirage.NET"
+                "../MS303.NET"
             ]
         }
     ]

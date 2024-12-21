@@ -62,12 +62,19 @@ func main() {
 		Output:    output,
 	}
 
+	var count int
 	for _, form := range vbproj.Forms {
 		f, err := vb6.Load(form)
 		if err != nil {
 			panic(err)
 		}
 
+		fmt.Println("Exporting ", f.Root.Name, "as", f.Root.Name+".cs")
+
 		export.Export(&project, f)
+
+		count++
 	}
+
+	fmt.Println("Exported", count, "forms to", output)
 }
