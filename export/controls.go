@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/guthius/vb6conv/vb6"
 )
@@ -226,8 +227,13 @@ func TextBoxBuilder(c *vb6.Control) *Control {
 	}
 
 	if passwordChar, ok := vb6.GetProp("PasswordChar", c.Properties); ok {
-		props["PasswordChar"] = passwordChar
+		passwordChar, err := strconv.Unquote(passwordChar)
+		if err == nil {
+			props["PasswordChar"] = fmt.Sprintf("'%s'", passwordChar)
+		}
 	}
+
+	// TODO:  IMEMode         =   3  'DISABLE
 
 	return &Control{
 		Name:      c.Name,
@@ -238,21 +244,6 @@ func TextBoxBuilder(c *vb6.Control) *Control {
 		MustInit:  false,
 	}
 }
-
-/*
-Begin VB.TextBox txtName
-   Begin VB.TextBox txtPassword
-
-      ForeColor       =   &H00FFC0C0&
-      Height          =   390
-      IMEMode         =   3  'DISABLE
-      Left            =   4680
-
-      TabIndex        =   1
-      Top             =   3000
-      Width           =   3375
-   End
-*/
 
 func buildControlSlice(controls []*vb6.Control) []*Control {
 	result := make([]*Control, 0, len(controls))
