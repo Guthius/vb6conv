@@ -20,9 +20,9 @@ func toBool(v bool) string {
 }
 
 func toColor(c uint32) string {
-	r := (c & 0xFF0000) >> 16
+	r := (c & 0x0000FF)
 	g := (c & 0x00FF00) >> 8
-	b := (c & 0x0000FF)
+	b := (c & 0xFF0000) >> 16
 
 	return fmt.Sprintf("System.Drawing.Color.FromArgb(%d, %d, %d)", r, g, b)
 }
