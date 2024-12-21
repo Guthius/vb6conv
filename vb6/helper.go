@@ -11,6 +11,20 @@ import (
 
 // These are a bunch of helper functions that are used to extract properties from the VB6 controls.
 
+func GetStr(key string, props PropertyMap) (string, bool) {
+	prop, ok := props[key]
+	if !ok {
+		return "", false
+	}
+
+	str, err := strconv.Unquote(prop.Value)
+	if err != nil {
+		return "", false
+	}
+
+	return str, true
+}
+
 func GetProp(key string, props PropertyMap) (string, bool) {
 	prop, ok := props[key]
 	if !ok {
@@ -116,21 +130,6 @@ func GetColor(key string, props PropertyMap) (uint32, bool) {
 	return uint32(v), true
 }
 
-func parseString(str string) string {
-	// TODO: Should implement this properly
-	str = strings.TrimSpace(str)
-	if len(str) == 0 {
-		return ""
-	}
-	if str[0] == '"' {
-		str = str[1:]
-	}
-	if str[len(str)-1] == '"' {
-		str = str[:len(str)-1]
-	}
-	return str
-}
-
 type frxHeader struct {
 	U1   uint32
 	U2   uint32
@@ -143,7 +142,11 @@ func GetResource(c *Control, path string) ([]byte, error) {
 		return nil, nil
 	}
 
-	filename := parseString(path[:colon])
+	filename, err := strconv.Unquote(path[:colon])
+	if err != nil {
+		return nil, err
+	}
+
 	if len(filename) == 0 {
 		return nil, nil
 	}
@@ -202,13 +205,8 @@ func GetFont(key string, props PropertyMap) (*Font, bool) {
 		return nil, false
 	}
 
-	family, ok := GetProp("Name", prop.Properties)
-	if !ok {
-		return nil, false
-	}
-
 	font := &Font{}
-	font.Family, _ = strconv.Unquote(family)
+	font.Family, _ = GetStr("Name", prop.Properties)
 	font.Size, _ = GetFloat32("Size", prop.Properties)
 	font.Charset, _ = GetInt("Charset", prop.Properties)
 	font.Weight, _ = GetInt("Weight", prop.Properties)

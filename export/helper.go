@@ -2,6 +2,7 @@ package export
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/guthius/vb6conv/vb6"
 )
@@ -17,6 +18,10 @@ func toBool(v bool) string {
 		return "true"
 	}
 	return "false"
+}
+
+func toStr(s string) string {
+	return strconv.Quote(s)
 }
 
 func toColor(c uint32) string {

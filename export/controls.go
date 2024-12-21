@@ -170,8 +170,8 @@ func LabelBuilder(c *vb6.Control) *Control {
 		props["ForeColor"] = toColor(foreColor)
 	}
 
-	if caption, ok := vb6.GetProp("Caption", c.Properties); ok {
-		props["Text"] = caption
+	if caption, ok := vb6.GetStr("Caption", c.Properties); ok {
+		props["Text"] = toStr(caption)
 	}
 
 	applyDefaultProps(c, props)
