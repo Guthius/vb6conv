@@ -70,7 +70,7 @@ vb6conv --project <path_to_project_file> --output <output_directory> [--namespac
 Convert a VB6 project without specifying a namespace:
 
 ```bash
-vb6conv.exe --project "C:/Projects/MyVB6Project.vbp" --output "C:/ConvertedProjects/MyCSharpProject"
+vb6conv --project "C:/Projects/MyVB6Project.vbp" --output "C:/ConvertedProjects/MyCSharpProject"
 ```
 
 ## Notes
