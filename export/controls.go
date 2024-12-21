@@ -19,25 +19,40 @@ type Control struct {
 type ControlBuilder func(c *vb6.Control) *Control
 
 func applyDefaultProps(c *vb6.Control, props map[string]string) {
-	if v, ok := vb6.GetBool("Visible", c.Properties); ok {
-		props["Visible"] = toBool(v)
+	if visible, ok := vb6.GetBool("Visible", c.Properties); ok {
+		props["Visible"] = toBool(visible)
 	}
 
-	if v, ok := vb6.GetColor("BackColor", c.Properties); ok {
-		props["BackColor"] = toColor(v)
+	if backColor, ok := vb6.GetColor("BackColor", c.Properties); ok {
+		props["BackColor"] = toColor(backColor)
 	}
 
 	if font, ok := vb6.GetFont("Font", c.Properties); ok {
 		props["Font"] = toFont(font)
 	}
+}
 
-	if v, ok := vb6.GetInt("TabIndex", c.Properties); ok {
-		props["TabIndex"] = toInt(v)
+func applyDefaultPropsForControl(c *vb6.Control, props map[string]string) {
+	applyDefaultProps(c, props)
+
+	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
+		props["Location"] = toPoint(x, y)
+	}
+
+	if w, h, ok := vb6.GetVector2("Width", "Height", c.Properties); ok {
+		props["Size"] = toSize(w, h)
+	}
+
+	if tabIndex, ok := vb6.GetInt("TabIndex", c.Properties); ok {
+		props["TabIndex"] = toInt(tabIndex)
 	}
 }
 
 func FormBuilder(c *vb6.Control) *Control {
 	props := make(map[string]string)
+
+	applyDefaultProps(c, props)
+
 	props["AutoScaleDimensions"] = toSizeF(6, 13)
 	props["AutoScaleMode"] = "System.Windows.Forms.AutoScaleMode.None"
 
@@ -45,17 +60,15 @@ func FormBuilder(c *vb6.Control) *Control {
 		props["ClientSize"] = toSize(w, h)
 	}
 
-	if v, ok := vb6.GetProp("Caption", c.Properties); ok {
-		props["Text"] = v
+	if caption, ok := vb6.GetProp("Caption", c.Properties); ok {
+		props["Text"] = caption
 	} else {
 		props["Text"] = c.Name
 	}
 
-	if v, ok := vb6.GetColor("BackColor", c.Properties); ok {
-		props["BackColor"] = toColor(v)
+	if backColor, ok := vb6.GetColor("BackColor", c.Properties); ok {
+		props["BackColor"] = toColor(backColor)
 	}
-
-	applyDefaultProps(c, props)
 
 	if startUpPosition, ok := vb6.GetInt("StartUpPosition", c.Properties); ok {
 		switch startUpPosition {
@@ -75,6 +88,7 @@ func FormBuilder(c *vb6.Control) *Control {
 	}
 
 	// TODO: WindowState
+	// TODO: ShowInTaskbar   =   0   'False
 
 	if minButton, ok := vb6.GetBool("MinButton", c.Properties); ok {
 		props["MinimizeBox"] = toBool(minButton)
@@ -99,26 +113,19 @@ func FormBuilder(c *vb6.Control) *Control {
 func PictureBoxBuilder(c *vb6.Control) *Control {
 	props := make(map[string]string)
 
-	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
-		props["Location"] = toPoint(x, y)
-	}
-	if w, h, ok := vb6.GetVector2("Width", "Height", c.Properties); ok {
-		props["Size"] = toSize(w, h)
-	}
+	applyDefaultPropsForControl(c, props)
 
 	if autoSize, _ := vb6.GetBool("AutoSize", c.Properties); autoSize {
 		props["SizeMode"] = "System.Windows.Forms.PictureBoxSizeMode.AutoSize"
 	}
 
-	if v, ok := vb6.GetInt("Appearance", c.Properties); ok {
-		if v == 0 {
+	if appearance, ok := vb6.GetInt("Appearance", c.Properties); ok {
+		if appearance == 0 {
 			props["BorderStyle"] = "System.Windows.Forms.BorderStyle.None"
 		} else {
 			props["BorderStyle"] = "System.Windows.Forms.BorderStyle.Fixed3D"
 		}
 	}
-
-	applyDefaultProps(c, props)
 
 	resources := make(map[string]any)
 	if locator, ok := vb6.GetProp("Picture", c.Properties); ok {
@@ -147,6 +154,8 @@ func PictureBoxBuilder(c *vb6.Control) *Control {
 func LabelBuilder(c *vb6.Control) *Control {
 	props := make(map[string]string)
 
+	applyDefaultPropsForControl(c, props)
+
 	if alignment, ok := vb6.GetInt("Alignment", c.Properties); ok {
 		switch alignment {
 		case 0:
@@ -158,14 +167,6 @@ func LabelBuilder(c *vb6.Control) *Control {
 		}
 	}
 
-	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
-		props["Location"] = toPoint(x, y)
-	}
-
-	if w, h, ok := vb6.GetVector2("Width", "Height", c.Properties); ok {
-		props["Size"] = toSize(w, h)
-	}
-
 	if foreColor, ok := vb6.GetColor("ForeColor", c.Properties); ok {
 		props["ForeColor"] = toColor(foreColor)
 	}
@@ -173,8 +174,6 @@ func LabelBuilder(c *vb6.Control) *Control {
 	if caption, ok := vb6.GetStr("Caption", c.Properties); ok {
 		props["Text"] = toStr(caption)
 	}
-
-	applyDefaultProps(c, props)
 
 	if backStyle, ok := vb6.GetInt("BackStyle", c.Properties); ok {
 		if backStyle == 0 { // Transparent
@@ -195,7 +194,7 @@ func LabelBuilder(c *vb6.Control) *Control {
 func TextBoxBuilder(c *vb6.Control) *Control {
 	props := make(map[string]string)
 
-	applyDefaultProps(c, props)
+	applyDefaultPropsForControl(c, props)
 
 	borderStyle, ok := vb6.GetInt("BorderStyle", c.Properties)
 	if !ok {
@@ -214,14 +213,6 @@ func TextBoxBuilder(c *vb6.Control) *Control {
 		props["ForeColor"] = toColor(foreColor)
 	}
 
-	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
-		props["Location"] = toPoint(x, y)
-	}
-
-	if w, h, ok := vb6.GetVector2("Width", "Height", c.Properties); ok {
-		props["Size"] = toSize(w, h)
-	}
-
 	if maxLength, ok := vb6.GetInt("MaxLength", c.Properties); ok {
 		props["MaxLength"] = toInt(maxLength)
 	}
@@ -238,6 +229,44 @@ func TextBoxBuilder(c *vb6.Control) *Control {
 	return &Control{
 		Name:      c.Name,
 		TypeName:  "System.Windows.Forms.TextBox",
+		Resources: make(map[string]any),
+		Props:     props,
+		Children:  buildControlSlice(c.Children),
+		MustInit:  false,
+	}
+}
+
+func FrameBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+
+	applyDefaultPropsForControl(c, props)
+
+	if caption, ok := vb6.GetStr("Caption", c.Properties); ok {
+		props["Text"] = toStr(caption)
+	}
+
+	return &Control{
+		Name:      c.Name,
+		TypeName:  "System.Windows.Forms.GroupBox",
+		Resources: make(map[string]any),
+		Props:     props,
+		Children:  buildControlSlice(c.Children),
+		MustInit:  false,
+	}
+}
+
+func CommandButtonBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+
+	applyDefaultPropsForControl(c, props)
+
+	if caption, ok := vb6.GetStr("Caption", c.Properties); ok {
+		props["Text"] = toStr(caption)
+	}
+
+	return &Control{
+		Name:      c.Name,
+		TypeName:  "System.Windows.Forms.Button",
 		Resources: make(map[string]any),
 		Props:     props,
 		Children:  buildControlSlice(c.Children),
@@ -267,6 +296,10 @@ func buildControl(c *vb6.Control) *Control {
 		builder = LabelBuilder
 	case c.TypeName == "VB.TextBox":
 		builder = TextBoxBuilder
+	case c.TypeName == "VB.Frame":
+		builder = FrameBuilder
+	case c.TypeName == "VB.CommandButton":
+		builder = CommandButtonBuilder
 	default:
 		return nil
 	}
