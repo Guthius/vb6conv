@@ -12,6 +12,7 @@ type Control struct {
 	TypeName  string
 	Resources map[string]any
 	Props     map[string]string
+	PropCalls map[string]string
 	Children  []*Control
 	MustInit  bool
 }
@@ -129,7 +130,7 @@ func PictureBoxBuilder(c *vb6.Control) *Control {
 
 	resources := make(map[string]any)
 	if locator, ok := vb6.GetProp("Picture", c.Properties); ok {
-		bytes, err := vb6.GetResource(c, locator)
+		bytes, err := vb6.GetBinaryResource(c, locator)
 		if err == nil {
 			resource := fmt.Sprintf("%s.Image", c.Name)
 			resources[resource] = bytes
@@ -274,6 +275,42 @@ func CommandButtonBuilder(c *vb6.Control) *Control {
 	}
 }
 
+func ComboBoxBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+	propCalls := make(map[string]string)
+
+	applyDefaultPropsForControl(c, props)
+
+	if style, ok := vb6.GetInt("Style", c.Properties); ok {
+		switch style {
+		case 0:
+			props["DropDownStyle"] = "System.Windows.Forms.ComboBoxStyle.DropDown"
+		case 1:
+			props["DropDownStyle"] = "System.Windows.Forms.ComboBoxStyle.Simple"
+		case 2:
+			props["DropDownStyle"] = "System.Windows.Forms.ComboBoxStyle.DropDownList"
+		}
+	}
+
+	if list, ok := vb6.GetProp("List", c.Properties); ok {
+		items, err := vb6.GetListResource(c, list)
+		if err == nil {
+			props["FormattingEnabled"] = toBool(true)
+			propCalls["Items"] = fmt.Sprintf("AddRange(%s)", toObjectArray(items))
+		}
+	}
+
+	return &Control{
+		Name:      c.Name,
+		TypeName:  "System.Windows.Forms.ComboBox",
+		Resources: make(map[string]any),
+		Props:     props,
+		PropCalls: propCalls,
+		Children:  buildControlSlice(c.Children),
+		MustInit:  false,
+	}
+}
+
 func buildControlSlice(controls []*vb6.Control) []*Control {
 	result := make([]*Control, 0, len(controls))
 	for _, c := range controls {
@@ -300,6 +337,8 @@ func buildControl(c *vb6.Control) *Control {
 		builder = FrameBuilder
 	case c.TypeName == "VB.CommandButton":
 		builder = CommandButtonBuilder
+	case c.TypeName == "VB.ComboBox":
+		builder = ComboBoxBuilder
 	default:
 		return nil
 	}

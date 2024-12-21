@@ -3,6 +3,7 @@ package export
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/guthius/vb6conv/vb6"
 )
@@ -66,4 +67,18 @@ func toFont(f *vb6.Font) string {
 	graphicsUnit := "System.Drawing.GraphicsUnit.Point"
 
 	return fmt.Sprintf("new System.Drawing.Font(\"%v\", %vF, %v, %v, ((byte)(%v)))", f.Family, f.Size, fontStyle, graphicsUnit, f.Charset)
+}
+
+func toObjectArray(items []string) string {
+	sb := strings.Builder{}
+	sb.WriteString("new object[] {\n")
+	for i, item := range items {
+		if i > 0 {
+			sb.WriteString(",\n")
+		}
+		s := strconv.Quote(item)
+		sb.WriteString(fmt.Sprintf("\t\t\t%s", s))
+	}
+	sb.WriteString("\n\t\t}")
+	return sb.String()
 }
