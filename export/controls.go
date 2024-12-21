@@ -191,6 +191,69 @@ func LabelBuilder(c *vb6.Control) *Control {
 	}
 }
 
+func TextBoxBuilder(c *vb6.Control) *Control {
+	props := make(map[string]string)
+
+	applyDefaultProps(c, props)
+
+	borderStyle, ok := vb6.GetInt("BorderStyle", c.Properties)
+	if !ok {
+		borderStyle = 1
+	}
+
+	if borderStyle == 0 {
+		props["BorderStyle"] = "System.Windows.Forms.BorderStyle.None"
+	} else {
+		if appearance, ok := vb6.GetInt("Appearance", c.Properties); ok && appearance == 0 {
+			props["BorderStyle"] = "System.Windows.Forms.BorderStyle.FixedSingle"
+		}
+	}
+
+	if foreColor, ok := vb6.GetColor("ForeColor", c.Properties); ok {
+		props["ForeColor"] = toColor(foreColor)
+	}
+
+	if x, y, ok := vb6.GetVector2("Left", "Top", c.Properties); ok {
+		props["Location"] = toPoint(x, y)
+	}
+
+	if w, h, ok := vb6.GetVector2("Width", "Height", c.Properties); ok {
+		props["Size"] = toSize(w, h)
+	}
+
+	if maxLength, ok := vb6.GetInt("MaxLength", c.Properties); ok {
+		props["MaxLength"] = toInt(maxLength)
+	}
+
+	if passwordChar, ok := vb6.GetProp("PasswordChar", c.Properties); ok {
+		props["PasswordChar"] = passwordChar
+	}
+
+	return &Control{
+		Name:      c.Name,
+		TypeName:  "System.Windows.Forms.TextBox",
+		Resources: make(map[string]any),
+		Props:     props,
+		Children:  buildControlSlice(c.Children),
+		MustInit:  false,
+	}
+}
+
+/*
+Begin VB.TextBox txtName
+   Begin VB.TextBox txtPassword
+
+      ForeColor       =   &H00FFC0C0&
+      Height          =   390
+      IMEMode         =   3  'DISABLE
+      Left            =   4680
+
+      TabIndex        =   1
+      Top             =   3000
+      Width           =   3375
+   End
+*/
+
 func buildControlSlice(controls []*vb6.Control) []*Control {
 	result := make([]*Control, 0, len(controls))
 	for _, c := range controls {
@@ -211,6 +274,8 @@ func buildControl(c *vb6.Control) *Control {
 		builder = PictureBoxBuilder
 	case c.TypeName == "VB.Label":
 		builder = LabelBuilder
+	case c.TypeName == "VB.TextBox":
+		builder = TextBoxBuilder
 	default:
 		return nil
 	}
