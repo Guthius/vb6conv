@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type locator struct {
+type ref struct {
 	filename string
 	offset   int64
 }
@@ -31,13 +31,20 @@ var (
 	errMalformedLocatorMissingFilename = errors.New("malformed locator: missing filename")
 )
 
-func parseLocator(searchPath string, s string) (*locator, error) {
-	colon := strings.Index(s, ":")
+// parseRef parses a reference string into a [ref] struct.
+//
+// The reference string is in the format "filename:offset".
+//   - The filename is relative to the search path.
+//   - The offset is a hexadecimal number.
+//
+// Example reference: "frmDeleteAccount.frx":0C81
+func parseRef(searchPath string, str string) (*ref, error) {
+	colon := strings.Index(str, ":")
 	if colon == -1 {
 		return nil, errMalformedLocatorMissingColon
 	}
 
-	filename, err := strconv.Unquote(s[:colon])
+	filename, err := strconv.Unquote(str[:colon])
 	if err != nil {
 		return nil, err
 	}
@@ -46,32 +53,32 @@ func parseLocator(searchPath string, s string) (*locator, error) {
 		return nil, errMalformedLocatorMissingFilename
 	}
 
-	offset, err := strconv.ParseInt(s[colon+1:], 16, 32)
+	offset, err := strconv.ParseInt(str[colon+1:], 16, 32)
 	if err != nil {
 		return nil, err
 	}
 
-	return &locator{
+	return &ref{
 		filename: filepath.Join(searchPath, filename),
 		offset:   int64(offset),
 	}, nil
 }
 
 // LoadBinary loads a binary resource from a FRX file.
-func LoadBinary(searchPath string, path string) ([]byte, error) {
-	res, err := parseLocator(searchPath, path)
+func LoadBinary(searchPath string, refStr string) ([]byte, error) {
+	ref, err := parseRef(searchPath, refStr)
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := os.Open(res.filename)
+	file, err := os.Open(ref.filename)
 	if err != nil {
 		return nil, err
 	}
 
 	defer file.Close()
 
-	_, err = file.Seek(res.offset, io.SeekStart)
+	_, err = file.Seek(ref.offset, io.SeekStart)
 	if err != nil {
 		return nil, err
 	}
@@ -97,20 +104,20 @@ func LoadBinary(searchPath string, path string) ([]byte, error) {
 }
 
 // LoadList loads a list of strings from a FRX file.
-func LoadList(searchPath string, path string) ([]string, error) {
-	res, err := parseLocator(searchPath, path)
+func LoadList(searchPath string, refStr string) ([]string, error) {
+	ref, err := parseRef(searchPath, refStr)
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := os.Open(res.filename)
+	file, err := os.Open(ref.filename)
 	if err != nil {
 		return nil, err
 	}
 
 	defer file.Close()
 
-	_, err = file.Seek(res.offset, io.SeekStart)
+	_, err = file.Seek(ref.offset, io.SeekStart)
 	if err != nil {
 		return nil, err
 	}
