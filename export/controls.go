@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/guthius/vb6conv/vb6"
+	"github.com/guthius/vb6conv/vb6/frx"
 )
 
 type Control struct {
@@ -134,7 +135,7 @@ func PictureBoxBuilder(c *vb6.Control) *Control {
 
 	resources := make(map[string]any)
 	if locator, ok := vb6.GetProp("Picture", c.Properties); ok {
-		bytes, err := vb6.GetBinaryResource(c, locator)
+		bytes, err := frx.LoadBinary(c.Form.Folder, locator)
 		if err == nil {
 			resource := fmt.Sprintf("%s.Image", c.Name)
 			resources[resource] = bytes
@@ -301,7 +302,7 @@ func ComboBoxBuilder(c *vb6.Control) *Control {
 	}
 
 	if list, ok := vb6.GetProp("List", c.Properties); ok {
-		items, err := vb6.GetListResource(c, list)
+		items, err := frx.LoadList(c.Form.Folder, list)
 		if err == nil {
 			props["FormattingEnabled"] = toBool(true)
 			propCalls["Items"] = fmt.Sprintf("AddRange(%s)", toObjectArray(items))
