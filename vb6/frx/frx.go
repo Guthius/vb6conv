@@ -2,6 +2,7 @@ package frx
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -25,10 +26,15 @@ type listHeader struct {
 	MaxLen uint16
 }
 
+var (
+	errMalformedLocatorMissingColon    = errors.New("malformed locator: missing colon")
+	errMalformedLocatorMissingFilename = errors.New("malformed locator: missing filename")
+)
+
 func parseLocator(searchPath string, s string) (*locator, error) {
 	colon := strings.Index(s, ":")
 	if colon == -1 {
-		return nil, nil
+		return nil, errMalformedLocatorMissingColon
 	}
 
 	filename, err := strconv.Unquote(s[:colon])
@@ -37,7 +43,7 @@ func parseLocator(searchPath string, s string) (*locator, error) {
 	}
 
 	if len(filename) == 0 {
-		return nil, nil
+		return nil, errMalformedLocatorMissingFilename
 	}
 
 	offset, err := strconv.ParseInt(s[colon+1:], 16, 32)
